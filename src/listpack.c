@@ -52,57 +52,171 @@
 #define LP_ENCODING_INT 0
 #define LP_ENCODING_STRING 1
 
+/* +---------+
+ * |0000 0000|
+ * +---------+ */
 #define LP_ENCODING_7BIT_UINT 0
+/* +---------+
+ * |1000 0000|
+ * +---------+ */
 #define LP_ENCODING_7BIT_UINT_MASK 0x80
+/* +---------+
+ * |1xxx xxxx|
+ * +---------+ */
 #define LP_ENCODING_IS_7BIT_UINT(byte) (((byte)&LP_ENCODING_7BIT_UINT_MASK)==LP_ENCODING_7BIT_UINT)
 #define LP_ENCODING_7BIT_UINT_ENTRY_SIZE 2
 
+/* +---------+
+ * |1000 0000|
+ * +---------+ */
 #define LP_ENCODING_6BIT_STR 0x80
+/* +---------+
+ * |1100 0000|
+ * +---------+ */
 #define LP_ENCODING_6BIT_STR_MASK 0xC0
+/* +---------+
+ * |10xx xxxx|
+ * +---------+ */
 #define LP_ENCODING_IS_6BIT_STR(byte) (((byte)&LP_ENCODING_6BIT_STR_MASK)==LP_ENCODING_6BIT_STR)
 
+/* +---------+
+ * |1100 0000|
+ * +---------+ */
 #define LP_ENCODING_13BIT_INT 0xC0
+/* +---------+
+ * |1110 0000|
+ * +---------+ */
 #define LP_ENCODING_13BIT_INT_MASK 0xE0
+/* +---------+---------+
+ * |110x xxxx|xxxx xxxx|
+ * +---------+---------+ */
 #define LP_ENCODING_IS_13BIT_INT(byte) (((byte)&LP_ENCODING_13BIT_INT_MASK)==LP_ENCODING_13BIT_INT)
 #define LP_ENCODING_13BIT_INT_ENTRY_SIZE 3
 
+/* +---------+
+ * |1110 0000|
+ * +---------+ */
 #define LP_ENCODING_12BIT_STR 0xE0
+/* +---------+
+ * |1111 0000|
+ * +---------+ */
 #define LP_ENCODING_12BIT_STR_MASK 0xF0
+/* +---------+---------+
+ * |1110 xxxx|xxxx xxxx|
+ * +---------+---------+ */
 #define LP_ENCODING_IS_12BIT_STR(byte) (((byte)&LP_ENCODING_12BIT_STR_MASK)==LP_ENCODING_12BIT_STR)
 
+/* +---------+
+ * |1111 0001|
+ * +---------+ */
 #define LP_ENCODING_16BIT_INT 0xF1
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_ENCODING_16BIT_INT_MASK 0xFF
+/* +---------+---------+---------+
+ * |1111 0001|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+ */
 #define LP_ENCODING_IS_16BIT_INT(byte) (((byte)&LP_ENCODING_16BIT_INT_MASK)==LP_ENCODING_16BIT_INT)
 #define LP_ENCODING_16BIT_INT_ENTRY_SIZE 4
 
+/* +---------+
+ * |1111 0010|
+ * +---------+ */
 #define LP_ENCODING_24BIT_INT 0xF2
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_ENCODING_24BIT_INT_MASK 0xFF
+/* +---------+---------+---------+---------+
+ * |1111 0010|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_24BIT_INT(byte) (((byte)&LP_ENCODING_24BIT_INT_MASK)==LP_ENCODING_24BIT_INT)
 #define LP_ENCODING_24BIT_INT_ENTRY_SIZE 5
 
+/* +---------+
+ * |1111 0011|
+ * +---------+ */
 #define LP_ENCODING_32BIT_INT 0xF3
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_ENCODING_32BIT_INT_MASK 0xFF
+/* +---------+---------+---------+---------+---------+
+ * |1111 0011|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_32BIT_INT(byte) (((byte)&LP_ENCODING_32BIT_INT_MASK)==LP_ENCODING_32BIT_INT)
 #define LP_ENCODING_32BIT_INT_ENTRY_SIZE 6
 
+/* +---------+
+ * |1111 0100|
+ * +---------+ */
 #define LP_ENCODING_64BIT_INT 0xF4
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_ENCODING_64BIT_INT_MASK 0xFF
+/* +---------+---------+---------+---------+---------+---------+---------+---------+---------+
+ * |1111 0100|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_64BIT_INT(byte) (((byte)&LP_ENCODING_64BIT_INT_MASK)==LP_ENCODING_64BIT_INT)
 #define LP_ENCODING_64BIT_INT_ENTRY_SIZE 10
 
+/* +---------+
+ * |1111 0000|
+ * +---------+ */
 #define LP_ENCODING_32BIT_STR 0xF0
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_ENCODING_32BIT_STR_MASK 0xFF
+/* +---------+---------+---------+---------+---------+
+ * |1111 0000|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_32BIT_STR(byte) (((byte)&LP_ENCODING_32BIT_STR_MASK)==LP_ENCODING_32BIT_STR)
 
+/* 综上:
+ * 字符串编码有: [2]6, [6]12, [8]32
+ * 数字编码有: [1]7u, [5]13, [8]16, [8]24, [8]32, [8]64 */
+
+/* +---------+
+ * |1111 1111|
+ * +---------+ */
 #define LP_EOF 0xFF
 
+/* +---------+
+ * |00xx xxxx|
+ * +---------+
+ *      |
+ *     0x3F
+ * 也就是说, 6 bit string 是用 6 bit 来保存长度 */
 #define LP_ENCODING_6BIT_STR_LEN(p) ((p)[0] & 0x3F)
+
+/* +---------+---------+
+ * |0000 xxxx|xxxx xxxx|
+ * +---------+---------+
+ *      |         |
+ *    0xF<<8    p[1]
+ * 也就是说, 12 bit string 是用 12 bit 来保存长度 */
 #define LP_ENCODING_12BIT_STR_LEN(p) ((((p)[0] & 0xF) << 8) | (p)[1])
+
+/* +---------+---------+---------+---------+---------+
+ * |1111 1111|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+
+ *      |         |         |         |         |
+ *    p[0]      p[4]      p[3]      p[2]      p[1]
+ * 也就是说, 32 bit string 是用 32 bit 来保存长度 */
 #define LP_ENCODING_32BIT_STR_LEN(p) (((uint32_t)(p)[1]<<0) | \
                                       ((uint32_t)(p)[2]<<8) | \
                                       ((uint32_t)(p)[3]<<16) | \
                                       ((uint32_t)(p)[4]<<24))
 
+/* +---------+---------+---------+---------+
+ * |xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+
+ *      |         |         |         |
+ *    p[4]      p[3]      p[2]      p[1]
+ * listpack 使用 32 位 字节来保存总的字节数 */
 #define lpGetTotalBytes(p)           (((uint32_t)(p)[0]<<0) | \
                                       ((uint32_t)(p)[1]<<8) | \
                                       ((uint32_t)(p)[2]<<16) | \
