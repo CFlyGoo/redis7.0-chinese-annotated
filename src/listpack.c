@@ -47,8 +47,8 @@
 
 #define LP_HDR_SIZE 6       /* 32 bit total len + 16 bit number of elements. */
 #define LP_HDR_NUMELE_UNKNOWN UINT16_MAX
-#define LP_MAX_INT_ENCODING_LEN 9
-#define LP_MAX_BACKLEN_SIZE 5
+#define LP_MAX_INT_ENCODING_LEN 9 /* 整数最大使用 9 个字节存储. 即 1 字节编码，8 字节为 32 位整数 */
+#define LP_MAX_BACKLEN_SIZE 5 /* backlen 最大使用 5 个字节存储 */
 #define LP_ENCODING_INT 0
 #define LP_ENCODING_STRING 1
 
@@ -68,111 +68,119 @@
 
 /* +---------+
  * |1000 0000|
+ * +---------+
+ * 编码后:
+ * +---------+
+ * |10xx xxxx|
  * +---------+ */
 #define LP_ENCODING_6BIT_STR 0x80
 /* +---------+
  * |1100 0000|
  * +---------+ */
 #define LP_ENCODING_6BIT_STR_MASK 0xC0
-/* +---------+
- * |10xx xxxx|
- * +---------+ */
 #define LP_ENCODING_IS_6BIT_STR(byte) (((byte)&LP_ENCODING_6BIT_STR_MASK)==LP_ENCODING_6BIT_STR)
 
 /* +---------+
  * |1100 0000|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+
+ * |110x xxxx|xxxx xxxx|
+ * +---------+---------+ */
 #define LP_ENCODING_13BIT_INT 0xC0
 /* +---------+
  * |1110 0000|
  * +---------+ */
 #define LP_ENCODING_13BIT_INT_MASK 0xE0
-/* +---------+---------+
- * |110x xxxx|xxxx xxxx|
- * +---------+---------+ */
 #define LP_ENCODING_IS_13BIT_INT(byte) (((byte)&LP_ENCODING_13BIT_INT_MASK)==LP_ENCODING_13BIT_INT)
 #define LP_ENCODING_13BIT_INT_ENTRY_SIZE 3
 
 /* +---------+
  * |1110 0000|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+
+ * |1110 xxxx|xxxx xxxx|
+ * +---------+---------+ */
 #define LP_ENCODING_12BIT_STR 0xE0
 /* +---------+
  * |1111 0000|
  * +---------+ */
 #define LP_ENCODING_12BIT_STR_MASK 0xF0
-/* +---------+---------+
- * |1110 xxxx|xxxx xxxx|
- * +---------+---------+ */
 #define LP_ENCODING_IS_12BIT_STR(byte) (((byte)&LP_ENCODING_12BIT_STR_MASK)==LP_ENCODING_12BIT_STR)
 
 /* +---------+
  * |1111 0001|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+---------+
+ * |1111 0001|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+ */
 #define LP_ENCODING_16BIT_INT 0xF1
 /* +---------+
  * |1111 1111|
  * +---------+ */
 #define LP_ENCODING_16BIT_INT_MASK 0xFF
-/* +---------+---------+---------+
- * |1111 0001|xxxx xxxx|xxxx xxxx|
- * +---------+---------+---------+ */
 #define LP_ENCODING_IS_16BIT_INT(byte) (((byte)&LP_ENCODING_16BIT_INT_MASK)==LP_ENCODING_16BIT_INT)
 #define LP_ENCODING_16BIT_INT_ENTRY_SIZE 4
 
 /* +---------+
  * |1111 0010|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+---------+---------+
+ * |1111 0010|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+ */
 #define LP_ENCODING_24BIT_INT 0xF2
 /* +---------+
  * |1111 1111|
  * +---------+ */
 #define LP_ENCODING_24BIT_INT_MASK 0xFF
-/* +---------+---------+---------+---------+
- * |1111 0010|xxxx xxxx|xxxx xxxx|xxxx xxxx|
- * +---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_24BIT_INT(byte) (((byte)&LP_ENCODING_24BIT_INT_MASK)==LP_ENCODING_24BIT_INT)
 #define LP_ENCODING_24BIT_INT_ENTRY_SIZE 5
 
 /* +---------+
  * |1111 0011|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+---------+---------+---------+
+ * |1111 0011|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_32BIT_INT 0xF3
 /* +---------+
  * |1111 1111|
  * +---------+ */
 #define LP_ENCODING_32BIT_INT_MASK 0xFF
-/* +---------+---------+---------+---------+---------+
- * |1111 0011|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
- * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_32BIT_INT(byte) (((byte)&LP_ENCODING_32BIT_INT_MASK)==LP_ENCODING_32BIT_INT)
 #define LP_ENCODING_32BIT_INT_ENTRY_SIZE 6
 
 /* +---------+
  * |1111 0100|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+---------+---------+---------+---------+---------+---------+---------+
+ * |1111 0100|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_64BIT_INT 0xF4
 /* +---------+
  * |1111 1111|
  * +---------+ */
 #define LP_ENCODING_64BIT_INT_MASK 0xFF
-/* +---------+---------+---------+---------+---------+---------+---------+---------+---------+
- * |1111 0100|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
- * +---------+---------+---------+---------+---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_64BIT_INT(byte) (((byte)&LP_ENCODING_64BIT_INT_MASK)==LP_ENCODING_64BIT_INT)
 #define LP_ENCODING_64BIT_INT_ENTRY_SIZE 10
 
 /* +---------+
  * |1111 0000|
- * +---------+ */
+ * +---------+
+ * 编码后:
+ * +---------+---------+---------+---------+---------+
+ * |1111 0000|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
+ * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_32BIT_STR 0xF0
 /* +---------+
  * |1111 1111|
  * +---------+ */
 #define LP_ENCODING_32BIT_STR_MASK 0xFF
-/* +---------+---------+---------+---------+---------+
- * |1111 0000|xxxx xxxx|xxxx xxxx|xxxx xxxx|xxxx xxxx|
- * +---------+---------+---------+---------+---------+ */
 #define LP_ENCODING_IS_32BIT_STR(byte) (((byte)&LP_ENCODING_32BIT_STR_MASK)==LP_ENCODING_32BIT_STR)
 
 /* 综上:
@@ -258,8 +266,8 @@
 static inline void lpAssertValidEntry(unsigned char* lp, size_t lpbytes, unsigned char *p);
 
 /* Don't let listpacks grow over 1GB in any case, don't wanna risk overflow in
- * Total Bytes header field */
-/* 在所有情况下不要让 listpack 增长超过 1GB。*/
+ * Total Bytes header field.
+ * 在所有情况下不要让 listpack 增长超过 1GB。*/
 #define LISTPACK_MAX_SAFETY_SIZE (1<<30)
 int lpSafeToAdd(unsigned char* lp, size_t add) {
     size_t len = lp? lpGetTotalBytes(lp): 0;
@@ -403,8 +411,8 @@ unsigned char* lpShrinkToFit(unsigned char *lp) {
     }
 }
 
-/* Stores the integer encoded representation of 'v' in the 'intenc' buffer. */
-/* 将 'v' 的整数编码存储在 'intenc' 缓冲区中。*/
+/* Stores the integer encoded representation of 'v' in the 'intenc' buffer.
+ * 将 'v' 的整数编码存储在 'intenc' 缓冲区中。并将 enclen 设置为整数占用的字节数 */
 static inline void lpEncodeIntegerGetType(int64_t v, unsigned char *intenc, uint64_t *enclen) {
     if (v >= 0 && v <= 127) {
         /* Single byte 0-127 integer. */
@@ -466,15 +474,9 @@ static inline void lpEncodeIntegerGetType(int64_t v, unsigned char *intenc, uint
  *
  * Regardless of the returned encoding, 'enclen' is populated by reference to
  * the number of bytes that the string or integer encoded element will require
- * in order to be represented. */
-/* 给定一个大小为 'size' 的元素 'ele'，
- * 确定该元素是否可以在编码为整数的 listpack 中表示，
- * 如果可以，则返回 LP_ENCODING_INT ，
- * 否则，如果无法进行整数编码，则返回 LP_ENCODING_STR 。
+ * in order to be represented.
  *
- * 如果返回 LP_ENCODING_INT ，该函数将该整数的编码存储在 'intenc' 缓冲区中。
- *
- * 'enclen' 表示字符串或整数编码元素所需的字节数的引用指针。*/
+ * enclen 存储为元素头 + 有效荷载所需的字节数 */
 static inline int lpEncodeGetType(unsigned char *ele, uint32_t size, unsigned char *intenc, uint64_t *enclen) {
     int64_t v;
     if (lpStringToInt64((const char*)ele, size, &v)) {
@@ -494,7 +496,8 @@ static inline int lpEncodeGetType(unsigned char *ele, uint32_t size, unsigned ch
  * 1 to 5. If 'buf' is NULL the function just returns the number of bytes
  * needed in order to encode the backlen.
  *
- * 将 l 的字节编码存储到 buf 中, 返回存储 l 所需要占用的字节数 */
+ * 将 l 的字节编码反向存储到 buf 中, 返回存储 l 所需要占用的字节数。
+ * 所谓反向，就是将 l 的 高位存储到 buf 的低位。这样做的原因是通过返回值取数及 decode 都会方便 */
 static inline unsigned long lpEncodeBacklen(unsigned char *buf, uint64_t l) {
     if (l <= 0x7F) {
         if (buf) buf[0] = l;
@@ -521,6 +524,17 @@ static inline unsigned long lpEncodeBacklen(unsigned char *buf, uint64_t l) {
         }
         return 4;
     } else {
+        /* 因为总字节数用 32 位表示, 则 listpack 单个节点最长的长度为
+         * 0xFFFFFFFF - LP_HDR_SIZE - 1(EOF) = 0xFFFFFFF8
+         * 又因为 LISTPACK+MAX_SAFETY_SIZE, 所以, 最大值为
+         * 0x1FFFFFFF
+         * 即 buf:
+         * +---------+---------+---------+---------+---------+
+         * |0000 0001|1111 1111|1111 1111|1111 1111|1111 1111|
+         * +---------+---------+---------+---------+---------+
+         *      |         |         |         |         |
+         *   buf[0]    buf[1]    buf[2]    buf[3]    buf[4]
+         * */
         if (buf) {
             buf[0] = l>>28;
             buf[1] = ((l>>21)&0x7F)|0x80;
@@ -598,10 +612,9 @@ static inline uint32_t lpCurrentEncodedSizeUnsafe(unsigned char *p) {
 /* Return bytes needed to encode the length of the listpack element pointed by 'p'.
  * This includes just the encoding byte, and the bytes needed to encode the length
  * of the element (excluding the element data itself)
- * If the element encoding is wrong then 0 is returned. */
-/* 返回 编码 'p' 所指定的 listpack 元素的长度字节数。
- * 这只包含了编码字节数和编码该元素所需长度的字节数。（不包含元素数据本身）
- * 如果该元素的编码是错误的则返回0。*/
+ * If the element encoding is wrong then 0 is returned.
+ *
+ * 返回编码 p 元素头所需占用的字节数 */
 static inline uint32_t lpCurrentEncodedSizeBytes(unsigned char *p) {
     if (LP_ENCODING_IS_7BIT_UINT(p[0])) return 1;
     if (LP_ENCODING_IS_6BIT_STR(p[0])) return 1;
@@ -663,8 +676,8 @@ unsigned char *lpPrev(unsigned char *lp, unsigned char *p) {
 }
 
 /* Return a pointer to the first element of the listpack, or NULL if the
- * listpack has no elements. */
-/* 返回一个指向 listpack 第一个元素的指针，如果 listpack 没有元素则返回 NULL。*/
+ * listpack has no elements.
+ * 返回一个指向 listpack 第一个元素的指针，如果 listpack 没有元素则返回 NULL。*/
 unsigned char *lpFirst(unsigned char *lp) {
                                          /* 跳过头部信息。 */
     unsigned char *p = lp + LP_HDR_SIZE; /* Skip the header. */
@@ -674,8 +687,8 @@ unsigned char *lpFirst(unsigned char *lp) {
 }
 
 /* Return a pointer to the last element of the listpack, or NULL if the
- * listpack has no elements. */
-/* 返回一个指向 listpack 最后一个元素的指针，如果 listpack 没有元素则返回 NULL。*/
+ * listpack has no elements.
+ * 返回一个指向 listpack 最后一个元素的指针，如果 listpack 没有元素则返回 NULL。*/
 unsigned char *lpLast(unsigned char *lp) {
                                                  /* 找到 EOF 元素。*/
     unsigned char *p = lp+lpGetTotalBytes(lp)-1; /* Seek EOF element. */
@@ -687,11 +700,15 @@ unsigned char *lpLast(unsigned char *lp) {
  * to use the cached value when within range, otherwise a full scan is
  * needed. As a side effect of calling this function, the listpack header
  * could be modified, because if the count is found to be already within
- * the 'numele' header field range, the new value is set. */
-/* 返回 listpack 中的元素个数。
+ * the 'numele' header field range, the new value is set.
+ *
+ * 返回 listpack 中的元素个数。
  * 如果在一定范围中，该函数会尝试使用缓存的值，否则需要全部扫描。
  * 作为调用该函数的副作用， listpack 头部信息可能会被修改，
- * 因为如果这个数在之前超出 'numele' 范围(0-65535)，而此次调用时回到 'numele' 的范围内时，会设置新的值。*/
+ * 因为如果这个数在之前超出 'numele' 范围(0-65535)，而此次调用时回到 'numele' 的范围内时，会设置新的值。
+ *
+ * 这个调用之所以可能会造成副作用，是因为删除元素前, 长度已经达到了 65535.
+ * 因为无法确定删除后是否小于这个值(不想每次删除都遍历一次), 所以就没有更新 */
 unsigned long lpLength(unsigned char *lp) {
     uint32_t numele = lpGetNumElements(lp);
     if (numele != LP_HDR_NUMELE_UNKNOWN) return numele;
@@ -748,36 +765,22 @@ unsigned long lpLength(unsigned char *lp) {
  * this lib.
  *
  * Similarly, there is no error returned since the listpack normally can be
- * assumed to be valid, so that would be a very high API cost. */
-/*
- * 返回 'p' 指定的 listpack 元素
- * 根据 'intbuf' 的值不同函数会有不同的行为。
- * 特殊的是如果 'intbuf' 为 NULL:
+ * assumed to be valid, so that would be a very high API cost.
  *
- * 如果元素内部编码为整数，则函数返回 NULL，并将整数值填充到 'count' 中。
- * 否则，如果元素编码是字符串，则返回指向字符串的指针（指向 listpack 本身内部），并将 'count' 设置为字符串的长度。
- *
- * 相反，如果 'intbuf' 指向一个调用者传递的缓冲区，缓冲区必须至少要有 LP_INTBUF_SIZE 字节，
- * 函数总是将元素作为字符串返回。（返回这个字符串的指针并设置 'count' 为字符串的长度）
- * 但是，如果 'intbuf' 编码是一个整型，'intbuf' 缓冲区将被用来存放它字符串的表示形式。
- *
- * 用户应该使用哪种形式，这取决于该值将用于做什么。
- * 如果函数返回的整数值可以立即使用，那么传递缓冲区（并将其转换回数字）当然是无用的。
- *
- * 如果' entry_size' 不为 NULL ，则 *entry_size 设置为 'p' 指向的 listpack 元素的 entry 长度。
- * 这包括编码字节、长度字节、元素数据本身和 backlen 字节。
- *
- * 如果函数是针对编码错误的 ziplist 调用的，那么没有有效的方法来解析它，
- * 这种情况下函数返回的结果就是一个值为 12345678900000000 + ＜未识别字节＞ 编码的整数，这可以理解成是一个出现错误的提示。
- * 在这种情况下崩溃是不明智的，因为使用该库的应用程序的要求不同。
- *
- * 同样，由于通常情况下 listpack 都是有效的，并不会返回任何错误，因此调用该函数可以被认为有一个非常高的 API 成本。*/
+ * 如果 entry_size 存在, entry_size 被赋值为存储该节点所有信息所需的字节数(编码 + 长度 + 有效荷载 + backlen),
+ * 对于字符串，函数将返回字符串有效荷载的头指针;
+ * 对于整形，返回结果会根据 intbuf 是否存在而发生改变。
+ * 具体说来，如果 intbuf 存在，则 intbuf 中将被用于存储，将返回 intbuf, 同时，count 用于存储表示改整形数值所需的字符数;
+ * 如果 intbuf 不存在，则将返回 NULL, 同时 count 被用于存储该整形数的实际值
+ * */
 static inline unsigned char *lpGetWithSize(unsigned char *p, int64_t *count, unsigned char *intbuf, uint64_t *entry_size) {
     int64_t val;
     uint64_t uval, negstart, negmax;
 
     assert(p); /* assertion for valgrind (avoid NPD) */
     if (LP_ENCODING_IS_7BIT_UINT(p[0])) {
+        /* 如果为 7 bit int 可以确保始终不为负数, 将 uval 设置为原始的 int 值
+         * entry_size 设置为该节点的大小 2*/
         negstart = UINT64_MAX; /* 7 bit ints are always positive. */
         negmax = 0;
         uval = p[0] & 0x7f;
@@ -854,8 +857,9 @@ static inline unsigned char *lpGetWithSize(unsigned char *p, int64_t *count, uns
     }
 
     /* Return the string representation of the integer or the value itself
-     * depending on intbuf being NULL or not. */
-    /* 根据 intbuf 是否为 NULL 返回整型的字符串表示形式或值的本身。*/
+     * depending on intbuf being NULL or not.
+     *
+     * 根据 intbuf 是否为 NULL 返回整型的字符串表示形式或值的本身。*/
     if (intbuf) {
         *count = ll2string((char*)intbuf,LP_INTBUF_SIZE,(long long)val);
         return intbuf;
@@ -923,7 +927,10 @@ unsigned char *lpFind(unsigned char *lp, unsigned char *p, unsigned char *s,
                 if (vencoding == 0) {
                     /* If the entry can be encoded as integer we set it to
                      * 1, else set it to UCHAR_MAX, so that we don't retry
-                     * again the next time. */
+                     * again the next time.
+                     * 如果给定的 s 可以被编码为整形，我们将 vencoding 设置为 0,
+                     * 否则 将 vencoding 设置为 UCHAR_MAX, 这样在下个循环中，
+                     * 就可以避免再次与整形节点进行比较 */
                     if (slen >= 32 || slen == 0 || !lpStringToInt64((const char*)s, slen, &vll)) {
                         vencoding = UCHAR_MAX;
                     } else {
@@ -941,7 +948,8 @@ unsigned char *lpFind(unsigned char *lp, unsigned char *p, unsigned char *s,
                 }
             }
 
-            /* Reset skip count */
+            /* Reset skip count
+             * 一旦进行一次过一次比较，就向后跳 */
             skipcnt = skip;
             p += entry_size;
         } else {
@@ -1003,7 +1011,7 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     unsigned char intenc[LP_MAX_INT_ENCODING_LEN];
     unsigned char backlen[LP_MAX_BACKLEN_SIZE];
 
-    uint64_t enclen; /* The length of the encoded element. */
+    uint64_t enclen; /* The length of the encoded element. 存储新的节点的长度 */
     int delete = (elestr == NULL && eleint == NULL);
 
     /* when deletion, it is conceptually replacing the element with a
@@ -1026,7 +1034,8 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
 
     /* Store the offset of the element 'p', so that we can obtain its
      * address again after a reallocation.
-     * 存储 p 距 listpack 头指针的偏移位置, 这样我们能够在内存被重新分配后, 仍然可以定位到地址 */
+     * 存储 p 距 listpack 头指针的偏移位置, 这样我们能够在内存被重新分配后, 仍然可以定位到地址.
+     * todo 这一句完全可以在重新分配内存前再写. 这样逻辑会更连贯. */
     unsigned long poff = p-lp;
 
     int enctype;
@@ -1039,14 +1048,15 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
         *
         * Whatever the returned encoding is, 'enclen' is populated with the
         * length of the encoded element.
-         * 如果给定的字符串可以被转换为整数数值，则将转换后的数值存储到 intenc 中。
-         * 无论是否可以转为整数, 都会将编码长度存储到 enclen. */
+        * 如果给定的字符串可以被转换为整数数值，则将转换后的数值存储到 intenc 中。
+        * 无论是否可以转为整数, 都会将编码长度存储到 enclen. */
         enctype = lpEncodeGetType(elestr,size,intenc,&enclen);
         if (enctype == LP_ENCODING_INT) eleint = intenc;
     } else if (eleint) {
         enctype = LP_ENCODING_INT;
         enclen = size; /* 'size' is the length of the encoded integer element. */
     } else {
+        /* 删除 */
         enctype = -1;
         enclen = 0;
     }
@@ -1056,6 +1066,7 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
      * the end to the start. */
     unsigned long backlen_size = (!delete) ? lpEncodeBacklen(backlen,enclen) : 0;
     uint64_t old_listpack_bytes = lpGetTotalBytes(lp);
+    /* 存储 p 这个节点所使用的总的字节数 */
     uint32_t replaced_len  = 0;
     if (where == LP_REPLACE) {
         replaced_len = lpCurrentEncodedSizeUnsafe(p);
@@ -1073,9 +1084,12 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
      * make room for the new element if the final allocation will get
      * larger, or we do it after if the final allocation will get smaller. */
 
-    unsigned char *dst = lp + poff; /* May be updated after reallocation. */
+    /* May be updated after reallocation.
+     * todo 这一句完全可以在 realloc 后计算, 保存的是原来存储 p 的地址  */
+    unsigned char *dst = lp + poff;
 
-    /* Realloc before: we need more room. */
+    /* Realloc before: we need more room.
+     * 针对于 LP_BEFORE 或者通过更长的节点替换 */
     if (new_listpack_bytes > old_listpack_bytes &&
         new_listpack_bytes > lp_malloc_size(lp)) {
         if ((lp = lp_realloc(lp,new_listpack_bytes)) == NULL) return NULL;
@@ -1085,15 +1099,18 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     /* Setup the listpack relocating the elements to make the exact room
      * we need to store the new one. */
     if (where == LP_BEFORE) {
+        /* 将从 p 头指针开始的数据整体后移 */
         memmove(dst+enclen+backlen_size,dst,old_listpack_bytes-poff);
     } else { /* LP_REPLACE. */
         long lendiff = (enclen+backlen_size)-replaced_len;
+        /* lendiff 可能为任意值 (0, -, +), 当为 0 时，其实没有做任何操作 */
         memmove(dst+replaced_len+lendiff,
                 dst+replaced_len,
                 old_listpack_bytes-poff-replaced_len);
     }
 
-    /* Realloc after: we need to free space. */
+    /* Realloc after: we need to free space.
+     * 针对于删除操作或者更小的节点替换 */
     if (new_listpack_bytes < old_listpack_bytes) {
         if ((lp = lp_realloc(lp,new_listpack_bytes)) == NULL) return NULL;
         dst = lp + poff;
@@ -1221,7 +1238,8 @@ unsigned char *lpDelete(unsigned char *lp, unsigned char *p, unsigned char **new
     return lpInsert(lp,NULL,NULL,0,p,LP_REPLACE,newp);
 }
 
-/* Delete a range of entries from the listpack start with the element pointed by 'p'. */
+/* Delete a range of entries from the listpack start with the element pointed by 'p'.
+ * 从 p 开始删除 num 个元素. */
 unsigned char *lpDeleteRangeWithEntry(unsigned char *lp, unsigned char **p, unsigned long num) {
     size_t bytes = lpBytes(lp);
     unsigned long deleted = 0;
@@ -1260,7 +1278,8 @@ unsigned char *lpDeleteRangeWithEntry(unsigned char *lp, unsigned char **p, unsi
     return lp;
 }
 
-/* Delete a range of entries from the listpack. */
+/* Delete a range of entries from the listpack.
+ * 从第 index 和元素向后删除 num 个元素 */
 unsigned char *lpDeleteRange(unsigned char *lp, long index, unsigned long num) {
     unsigned char *p;
     uint32_t numele = lpGetNumElements(lp);
@@ -1277,6 +1296,7 @@ unsigned char *lpDeleteRange(unsigned char *lp, long index, unsigned long num) {
      * use it no overflow happens. */
     if (numele != LP_HDR_NUMELE_UNKNOWN && index < 0) index = (long)numele + index;
     if (numele != LP_HDR_NUMELE_UNKNOWN && (numele - (unsigned long)index) <= num) {
+        /* 直接删除到了队尾 */
         p[0] = LP_EOF;
         lpSetTotalBytes(lp, p - lp + 1);
         lpSetNumElements(lp, index);
@@ -1487,7 +1507,9 @@ int lpValidateNext(unsigned char *lp, unsigned char **pp, size_t lpbytes) {
     /* move to the next entry */
     p += entrylen;
 
-    /* make sure the encoded length at the end patches the one at the beginning. */
+    /* make sure the encoded length at the end patches the one at the beginning.
+     * 确保 **p 末尾声明的占用字节数与开头声明的一致.
+     * entrylen 和 backlen 都只声明了元素头 + 元素内容的长度，不包含存储 backlen 自身所需的字节数. */
     uint64_t prevlen = lpDecodeBacklen(p-1);
     if (prevlen + encodedBacklen != entrylen)
         return 0;
@@ -1554,7 +1576,8 @@ int lpValidateIntegrity(unsigned char *lp, size_t size, int deep,
 }
 
 /* Compare entry pointer to by 'p' with string 's' of length 'slen'.
- * Return 1 if equal. */
+ * Return 1 if equal.
+ * 对 p 中存储的内容与 s 进行比较 */
 unsigned int lpCompare(unsigned char *p, unsigned char *s, uint32_t slen) {
     unsigned char *value;
     int64_t sz;
@@ -1562,6 +1585,7 @@ unsigned int lpCompare(unsigned char *p, unsigned char *s, uint32_t slen) {
 
     value = lpGet(p, &sz, NULL);
     if (value) {
+        /* 字符串 */
         return (slen == sz) && memcmp(value,s,slen) == 0;
     } else {
         /* We use lpStringToInt64() to get an integer representation of the
