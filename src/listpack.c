@@ -177,7 +177,7 @@
 
 /* 综上:
  * 字符串编码有: [2]6, [6]12, [8]32
- * 数字编码有: [1]7u, [5]13, [8]16, [8]24, [8]32, [8]64 */
+ * 数字编码有: [1]7u, [6]13, [8]16, [8]24, [8]32, [8]64 */
 
 /* +---------+
  * |1111 1111|
@@ -492,42 +492,41 @@ static inline int lpEncodeGetType(unsigned char *ele, uint32_t size, unsigned ch
  * of the previous element of size 'l', in the target buffer 'buf'.
  * The function returns the number of bytes used to encode it, from
  * 1 to 5. If 'buf' is NULL the function just returns the number of bytes
- * needed in order to encode the backlen. */
-/* 在 'buf' 中存储一个反向编码的可变长度字段， 'l'表示前驱元素的长度大小。
- * 该函数返回编码它所需的字节数，从1到5。
- * 如果 'buf' 为空则函数只返回对 backlen 编码需要的字节数。*/
+ * needed in order to encode the backlen.
+ *
+ * 将 l 的字节编码存储到 buf 中, 返回存储 l 所需要占用的字节数 */
 static inline unsigned long lpEncodeBacklen(unsigned char *buf, uint64_t l) {
-    if (l <= 127) {
+    if (l <= 0x7F) {
         if (buf) buf[0] = l;
         return 1;
-    } else if (l < 16383) {
+    } else if (l < 0x3FFF) {
         if (buf) {
             buf[0] = l>>7;
-            buf[1] = (l&127)|128;
+            buf[1] = (l&0x7F)|0x80;
         }
         return 2;
-    } else if (l < 2097151) {
+    } else if (l < 0x1FFFFF) {
         if (buf) {
             buf[0] = l>>14;
-            buf[1] = ((l>>7)&127)|128;
-            buf[2] = (l&127)|128;
+            buf[1] = ((l>>7)&0x7F)|0x80;
+            buf[2] = (l&0x7F)|0x80;
         }
         return 3;
-    } else if (l < 268435455) {
+    } else if (l < 0x0FFFFFFF) {
         if (buf) {
             buf[0] = l>>21;
-            buf[1] = ((l>>14)&127)|128;
-            buf[2] = ((l>>7)&127)|128;
-            buf[3] = (l&127)|128;
+            buf[1] = ((l>>14)&0x7F)|0x80;
+            buf[2] = ((l>>7)&0x7F)|0x80;
+            buf[3] = (l&0x7F)|0x80;
         }
         return 4;
     } else {
         if (buf) {
             buf[0] = l>>28;
-            buf[1] = ((l>>21)&127)|128;
-            buf[2] = ((l>>14)&127)|128;
-            buf[3] = ((l>>7)&127)|128;
-            buf[4] = (l&127)|128;
+            buf[1] = ((l>>21)&0x7F)|0x80;
+            buf[2] = ((l>>14)&0x7F)|0x80;
+            buf[3] = ((l>>7)&0x7F)|0x80;
+            buf[4] = (l&0x7F)|0x80;
         }
         return 5;
     }
@@ -540,8 +539,8 @@ static inline uint64_t lpDecodeBacklen(unsigned char *p) {
     uint64_t val = 0;
     uint64_t shift = 0;
     do {
-        val |= (uint64_t)(p[0] & 127) << shift;
-        if (!(p[0] & 128)) break;
+        val |= (uint64_t)(p[0] & 0x7F) << shift;
+        if (!(p[0] & 0x80)) break;
         shift += 7;
         p--;
         if (shift > 28) return UINT64_MAX;
@@ -579,12 +578,9 @@ static inline void lpEncodeString(unsigned char *buf, unsigned char *s, uint32_t
  * Note that this method may access additional bytes (in case of 12 and 32 bit
  * str), so should only be called when we know 'p' was already validated by
  * lpCurrentEncodedSizeBytes or ASSERT_INTEGRITY_LEN (possibly since 'p' is
- * a return value of another function that validated its return. */
-/* 返回这个 'p' 所指向的 listapck 元素的编码长度。
- * 该编码长度是编码字节数、长度字节数和元素数据本身所占字节数的总和。
- * 如果该元素编码是错误的则返回0。
- * 注意这个方法可能访问额外的字节（在编码为12和32位字符串的情况下），
- * 所以我们应该在 'p' 通过 lpCurrentEncodedSizeBytes 或 ASSERT_INTEGRITY_LEN （可能 'p' 是验证其返回的另一个函数的返回值）验证后才调用。*/
+ * a return value of another function that validated its return.
+ *
+ * 返回存储元素 p 编码及其内容所需的字节数 */
 static inline uint32_t lpCurrentEncodedSizeUnsafe(unsigned char *p) {
     if (LP_ENCODING_IS_7BIT_UINT(p[0])) return 1;
     if (LP_ENCODING_IS_6BIT_STR(p[0])) return 1+LP_ENCODING_6BIT_STR_LEN(p);
@@ -1012,13 +1008,16 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
 
     /* when deletion, it is conceptually replacing the element with a
      * zero-length element. So whatever we get passed as 'where', set
-     * it to LP_REPLACE. */
+     * it to LP_REPLACE.
+     * 删除实际上就是用长度为 0 的元素替换当前元素，所以将 where 设置为 LP_REPLACE */
     if (delete) where = LP_REPLACE;
 
     /* If we need to insert after the current element, we just jump to the
      * next element (that could be the EOF one) and handle the case of
      * inserting before. So the function will actually deal with just two
-     * cases: LP_BEFORE and LP_REPLACE. */
+     * cases: LP_BEFORE and LP_REPLACE.
+     * 如果要插入到当前元素之后，就跳过该元素，替换为插入到下一个元素（包含 EOF）之前.
+     * 所以，实际上函数只需要处理两种情况: LP_BEFORE、LP_REPLACE */
     if (where == LP_AFTER) {
         p = lpSkip(p);
         where = LP_BEFORE;
@@ -1026,7 +1025,8 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
     }
 
     /* Store the offset of the element 'p', so that we can obtain its
-     * address again after a reallocation. */
+     * address again after a reallocation.
+     * 存储 p 距 listpack 头指针的偏移位置, 这样我们能够在内存被重新分配后, 仍然可以定位到地址 */
     unsigned long poff = p-lp;
 
     int enctype;
@@ -1038,7 +1038,9 @@ unsigned char *lpInsert(unsigned char *lp, unsigned char *elestr, unsigned char 
         * lpEncodeString() to actually write the encoded string on place later.
         *
         * Whatever the returned encoding is, 'enclen' is populated with the
-        * length of the encoded element. */
+        * length of the encoded element.
+         * 如果给定的字符串可以被转换为整数数值，则将转换后的数值存储到 intenc 中。
+         * 无论是否可以转为整数, 都会将编码长度存储到 enclen. */
         enctype = lpEncodeGetType(elestr,size,intenc,&enclen);
         if (enctype == LP_ENCODING_INT) eleint = intenc;
     } else if (eleint) {
